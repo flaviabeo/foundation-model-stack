@@ -235,6 +235,7 @@ def _get_adapter(
 
         return id_fn
     else:
+
         return __adapters[architecture][source]
 
 
@@ -484,9 +485,13 @@ def load_state_dict_into_model(
     unused_keys = set()
     sd_keys = set(state_dict.keys())
 
+    import inspect
+
     print("def load_state_dict_into_model(")
     print("adapter")
     print(adapter)
+    lines = inspect.getsource(adapter)
+    print("/".join(lines))
 
     print("sd_keys")
     print(sd_keys)
