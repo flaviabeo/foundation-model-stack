@@ -499,6 +499,7 @@ def _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]
         new_name = name
         for pattern, repl in replacements:
             new_name = re.sub(pattern, repl, new_name)
+            print(bool(re.sub(pattern, repl, new_name)))
         if "layers" in new_name:
             print("layers depois da regex replace")
             print(new_name)
