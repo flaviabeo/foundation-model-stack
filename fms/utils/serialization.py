@@ -378,6 +378,8 @@ def load_state_dict(
 
     checkpoint_sds = []
     if checkpoints[0].suffix == ".safetensors":
+        print("checkpoints[0].suffix == safetensors")
+        print(checkpoint_sds)
         for ckp in checkpoints:
             checkpoint_sds.append(
                 _load_safetensors_state_dict(
@@ -391,6 +393,8 @@ def load_state_dict(
                 torch.load(str(ckpt_path), mmap=True, map_location=initial_device)
                 for ckpt_path in checkpoints
             ]
+            print("with torch.no_grad():")
+            print(checkpoint_sds)
 
     print("checkpoint_sds")
     print(checkpoint_sds)
@@ -476,10 +480,6 @@ def load_state_dict_into_model(
     """
 
     # 1. Get the adapter from checkpoint sd to fms sd
-    print("def load_state_dict_into_model(")
-    print("get_adapter(architecture, source)")
-    print(architecture)
-    print(source)
     adapter = _get_adapter(architecture, source)
 
     # Prepare the extra_kwargs for the adapter
@@ -494,13 +494,6 @@ def load_state_dict_into_model(
     used_keys = set()
     unused_keys = set()
     sd_keys = set(state_dict.keys())
-
-    print("def load_state_dict_into_model(")
-    print("adapter_kwargs[model_config]")
-    print(adapter_kwargs["model_config"])
-
-    print("sd_keys")
-    print(sd_keys)
 
     with torch.no_grad():
         for key in sd_keys:
@@ -536,9 +529,6 @@ def load_state_dict_into_model(
                     state_dict.pop(p_key)
             del partial_sd
             del fms_partial_sd
-
-            print("used_keys")
-            print(used_keys)
 
     if unused_keys and rank == 0:
         # TODO: start using logger?
