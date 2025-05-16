@@ -496,16 +496,13 @@ def _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]
         new_name = name
         for pattern, repl in replacements:
             new_name = re.sub(pattern, repl, new_name)
-        print("527 - _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]")
-        file1 = "/tmp/foundation-model-stack/fms/output/hf_to_fms_names_replacements.txt"
-        with open(file1, mode='w', encoding='UTF-8') as output:
-            print(new_name, file=output)
+        print(new_name)
         new_sd[new_name] = param
     
-    print("529 - serialization.register_adapter_step(_architecture_name, hf_to_fms_names, _hf_to_fms_names)")
-    file1 = "/tmp/foundation-model-stack/fms/output/hf_to_fms_names.txt"
-    with open(file1, mode='w', encoding='UTF-8') as output:
-        print(new_sd, file=output)
+    # print("529 - serialization.register_adapter_step(_architecture_name, hf_to_fms_names, _hf_to_fms_names)")
+    # file1 = "/tmp/foundation-model-stack/fms/output/hf_to_fms_names.txt"
+    # with open(file1, mode='w', encoding='UTF-8') as output:
+    #     print(new_sd, file=output)
     return new_sd
 
 
