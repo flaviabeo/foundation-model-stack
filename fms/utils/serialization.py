@@ -86,8 +86,6 @@ def register_adapter(
             step_func: Callable[[Mapping[str, Any]], Mapping[str, Any]],
         ) -> Mapping[str, Any]:
             return step_func(state_dict, **extra_kwargs)
-        
-        print(reduce(reduce_fn,step_functions,initial_sd,))
 
         return reduce(
             reduce_fn,
@@ -472,6 +470,10 @@ def load_state_dict_into_model(
     """
 
     # 1. Get the adapter from checkpoint sd to fms sd
+    print("def load_state_dict_into_model(")
+    print("get_adapter(architecture, source)")
+    print(architecture)
+    print(source)
     adapter = _get_adapter(architecture, source)
 
     # Prepare the extra_kwargs for the adapter
@@ -487,13 +489,9 @@ def load_state_dict_into_model(
     unused_keys = set()
     sd_keys = set(state_dict.keys())
 
-    import inspect
-
     print("def load_state_dict_into_model(")
-    print("adapter")
-    print(adapter.__name__)
-    # lines = inspect.getsource(adapter.)
-    # print(lines)
+    print("adapter_kwargs[model_config]")
+    print(adapter_kwargs["model_config"])
 
     print("sd_keys")
     print(sd_keys)
