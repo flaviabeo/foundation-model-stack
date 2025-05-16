@@ -392,6 +392,7 @@ def get_model(
 
     lazy_sd: MutableMapping[str, Any] = {}
     if model_path is not None:
+        print(" if model_path is not None:")
         lazy_sd = serialization.load_state_dict(
             model_path,
             source=source,
@@ -401,6 +402,8 @@ def get_model(
             rank=rank,
             world_size=world_size,
         )
+        print("lazy_sd")
+        print(lazy_sd)
 
     if "distributed_strategy" not in extra_args:
         if distributed_strategy == "tp":
