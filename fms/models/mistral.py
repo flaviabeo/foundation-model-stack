@@ -481,7 +481,6 @@ def _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]
         (r"^model.embed_tokens.weight", "base_model.embedding.weight"),
         (r"^model.norm", "base_model.dec_norm"),
         (r"^model.layers", "base_model.layers"),
-        (r"^layers", "base_model.layers"),
         (r"self_attn\.k_proj", "attn.in_proj.key"),
         (r"self_attn\.v_proj", "attn.in_proj.value"),
         (r"self_attn\.q_proj", "attn.in_proj.query"),
@@ -491,6 +490,10 @@ def _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]
         (r"mlp\.down_proj", "ff_sub_layer.w2"),
         (r"input_layernorm", "ln"),
         (r"post_attention_layernorm", "ff_ln"),
+        (r"attention\.wk", "attn.in_proj.key"),
+        (r"attention\.wv", "attn.in_proj.value"),
+        (r"attention\.wq", "attn.in_proj.query"),
+        (r"attention\.wo", "attn.dense"),
     ]
     new_sd = {}
     for name, param in input_sd.items():
