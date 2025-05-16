@@ -680,9 +680,13 @@ class HFModelArchitecture(PreTrainedModel, metaclass=PostInitCaller):
         ckp = torch.load(weights_path, map_location=device_map)
         model_sd = ckp.get("model_state")
 
+        print("from pytorch weights")
+
         # Rename fields to new arch
         if remap_weights:
+            print(" if remap_weights:")
             sd_keys = list(model_sd.keys())
+            print(sd_keys)
             for key in sd_keys:
                 for remap_key, remap_value in remap_weights.items():
                     if remap_key in key:
