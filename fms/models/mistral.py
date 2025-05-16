@@ -230,6 +230,7 @@ class MistralHeadless(nn.Module):
             block = self.distributed_strategy.distribute_layer(block, i)
             layers.append(block)
         self.layers = nn.ModuleList(layers)
+        print(self.layers)
 
         dec_norm = LayerNormParameterized(
             self.config.emb_dim,
@@ -318,6 +319,8 @@ class MistralHeadless(nn.Module):
         present_key_value_states = []
 
         for i, layer in enumerate(self.layers):
+            print(i)
+            print(layer)
             output = layer(
                 x=x_in,
                 position_ids=position_ids,
