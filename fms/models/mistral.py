@@ -493,11 +493,15 @@ def _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]
     ]
     new_sd = {}
     for name, param in input_sd.items():
-        if not re.findall(r"^layers", name):
-            new_name = name
-            for pattern, repl in replacements:
-                new_name = re.sub(pattern, repl, new_name)
-            new_sd[new_name] = param
+        # if not re.findall(r"^layers", name):
+        #     new_name = name
+        #     for pattern, repl in replacements:
+        #         new_name = re.sub(pattern, repl, new_name)
+        #     new_sd[new_name] = param
+        new_name = name
+        for pattern, repl in replacements:
+            new_name = re.sub(pattern, repl, new_name)
+        new_sd[new_name] = param
     return new_sd
 
 
@@ -529,7 +533,7 @@ def _hf_to_fms_rope(
 
     rope_params = _get_rope_params(linear_type)
     trans_required_pattern = re.compile(
-        f"base_model.layers.[0-9]+.attn.in_proj.(query|key).({'|'.join(rope_params)})"
+        f"layers.[0-9]+.attn.in_proj.(query|key).({'|'.join(rope_params)})"
     )
     for name, param in input_sd.items():
         # hf -> fms requires a transpose operation for the query and key
@@ -544,6 +548,7 @@ def _hf_to_fms_rope(
         # loading from an HF checkpoint, we need to undo the transformation
         # that HF does from the original Meta weights:
         if bool(trans_required_pattern.match(name)):
+            print("rope -  if bool(trans_required_pattern.match(name)):")
             temp = param
             if "gptq" in linear_type and temp.dim() == 2:
                 # GPTQ qweights are [in_feat, out_feat] (unlike usual [out_feat, in_feat])
