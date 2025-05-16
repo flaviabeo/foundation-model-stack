@@ -493,6 +493,9 @@ def _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]
     ]
     new_sd = {}
     for name, param in input_sd.items():
+        if "layers" in name:
+            print("esse nome lazarento nao existe no mapping")
+            print(name)
         new_name = name
         for pattern, repl in replacements:
             new_name = re.sub(pattern, repl, new_name)
@@ -534,7 +537,7 @@ def _hf_to_fms_rope(
 
     rope_params = _get_rope_params(linear_type)
     trans_required_pattern = re.compile(
-        f"layers.[0-9]+.attn.in_proj.(query|key).({'|'.join(rope_params)})"
+        f"base_model.layers.[0-9]+.attn.in_proj.(query|key).({'|'.join(rope_params)})"
     )
     for name, param in input_sd.items():
         # hf -> fms requires a transpose operation for the query and key
