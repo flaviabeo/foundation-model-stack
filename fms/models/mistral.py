@@ -494,18 +494,16 @@ def _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]
     new_sd = {}
     for name, param in input_sd.items():
         if "layers" in name:
-            print("esse nome lazarento nao existe no mapping")
+            print("layers no nome")
             print(name)
         new_name = name
         for pattern, repl in replacements:
             new_name = re.sub(pattern, repl, new_name)
-        print(new_name)
+        if "layers" in new_name:
+            print("layers depois da regex replace")
+            print(new_name)
         new_sd[new_name] = param
     
-    # print("529 - serialization.register_adapter_step(_architecture_name, hf_to_fms_names, _hf_to_fms_names)")
-    # file1 = "/tmp/foundation-model-stack/fms/output/hf_to_fms_names.txt"
-    # with open(file1, mode='w', encoding='UTF-8') as output:
-    #     print(new_sd, file=output)
     return new_sd
 
 
@@ -574,10 +572,6 @@ def _hf_to_fms_rope(
         else:
             new_sd[name] = param
 
-    print("600 - serialization.register_adapter_step(_architecture_name, hf_to_fms_rope, _hf_to_fms_rope)")
-    file1 = "/tmp/foundation-model-stack/fms/output/hf_to_fms_rope.txt"
-    with open(file1, mode='w', encoding='UTF-8') as output:
-        print(new_sd, file=output)
     return new_sd
 
 
