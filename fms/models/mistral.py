@@ -481,6 +481,7 @@ def _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]
         (r"^model.embed_tokens.weight", "base_model.embedding.weight"),
         (r"^model.norm", "base_model.dec_norm"),
         (r"^model.layers", "base_model.layers"),
+        (r"^layers", "base_model.layers"),
         (r"self_attn\.k_proj", "attn.in_proj.key"),
         (r"self_attn\.v_proj", "attn.in_proj.value"),
         (r"self_attn\.q_proj", "attn.in_proj.query"),
