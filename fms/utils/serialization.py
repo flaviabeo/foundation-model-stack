@@ -86,6 +86,8 @@ def register_adapter(
             step_func: Callable[[Mapping[str, Any]], Mapping[str, Any]],
         ) -> Mapping[str, Any]:
             return step_func(state_dict, **extra_kwargs)
+        
+        print(reduce(reduce_fn,step_functions,initial_sd,))
 
         return reduce(
             reduce_fn,
