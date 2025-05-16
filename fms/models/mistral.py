@@ -493,18 +493,11 @@ def _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]
     ]
     new_sd = {}
     for name, param in input_sd.items():
-        if "layers" in name:
-            print("layers no nome")
-            print(name)
-        new_name = name
-        for pattern, repl in replacements:
-            new_name = re.sub(pattern, repl, new_name)
-            print(bool(re.sub(pattern, repl, new_name)))
-        if "layers" in new_name:
-            print("layers depois da regex replace")
-            print(new_name)
-        new_sd[new_name] = param
-    
+        if not re.findall(r"^layers", name):
+            new_name = name
+            for pattern, repl in replacements:
+                new_name = re.sub(pattern, repl, new_name)
+            new_sd[new_name] = param
     return new_sd
 
 
