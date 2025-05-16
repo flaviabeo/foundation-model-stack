@@ -493,7 +493,6 @@ def _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]
         (r"attention\.wk", "attn.in_proj.key"),
         (r"attention\.wv", "attn.in_proj.value"),
         (r"attention\.wq", "attn.in_proj.query"),
-        (r"attention\.wo", "attn.dense"),
     ]
     new_sd = {}
     for name, param in input_sd.items():
@@ -537,7 +536,7 @@ def _hf_to_fms_rope(
 
     rope_params = _get_rope_params(linear_type)
     trans_required_pattern = re.compile(
-        f"base_model.layers.[0-9]+.attn.in_proj.(query|key).({'|'.join(rope_params)})"
+        f"layers.[0-9]+.attention.(wk|wq).({'|'.join(rope_params)})"
     )
     for name, param in input_sd.items():
         # hf -> fms requires a transpose operation for the query and key
