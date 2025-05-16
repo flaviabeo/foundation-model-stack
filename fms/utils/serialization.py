@@ -484,6 +484,13 @@ def load_state_dict_into_model(
     unused_keys = set()
     sd_keys = set(state_dict.keys())
 
+    print("def load_state_dict_into_model(")
+    print("adapter")
+    print(adapter)
+
+    print("sd_keys")
+    print(sd_keys)
+
     with torch.no_grad():
         for key in sd_keys:
             if key in used_keys:
@@ -518,6 +525,9 @@ def load_state_dict_into_model(
                     state_dict.pop(p_key)
             del partial_sd
             del fms_partial_sd
+
+            print("used_keys")
+            print(used_keys)
 
     if unused_keys and rank == 0:
         # TODO: start using logger?
