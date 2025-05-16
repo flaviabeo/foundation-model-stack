@@ -494,7 +494,7 @@ def _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]
     new_sd = {}
     for name, param in input_sd.items():
         new_name = name
-        if not re.findall("^layers", name):
+        if not re.findall(r"^layers", name):
             for pattern, repl in replacements:
                 new_name = re.sub(pattern, repl, new_name)
             new_sd[new_name] = param
