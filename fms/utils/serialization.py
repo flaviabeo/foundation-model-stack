@@ -490,8 +490,8 @@ def load_state_dict_into_model(
     print("def load_state_dict_into_model(")
     print("adapter")
     print(adapter)
-    lines = inspect.getsource(adapter)
-    print("/".join(lines))
+    lines = inspect.getsource(adapter.__name__)
+    print(lines)
 
     print("sd_keys")
     print(sd_keys)
