@@ -129,6 +129,8 @@ def _infer_model_configuration(
                 allow_patterns.append("*.pt")
             else:
                 allow_patterns.append("*.safetensors*")
+            print("if download_weights:")
+            print(allow_patterns)
         else:
             allow_patterns = ["config.json"]
             ignore_patterns = None
@@ -146,6 +148,9 @@ def _infer_model_configuration(
 
     architecture = config.architectures[0]
     config_params = {}
+
+    print("config = AutoConfig.from_pretrained(model_path)")
+    print(config)
 
     if architecture == "LlamaForCausalLM":
         inner_dim = config.intermediate_size

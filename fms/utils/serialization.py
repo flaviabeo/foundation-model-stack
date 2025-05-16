@@ -355,9 +355,6 @@ def load_state_dict(
     if model_path.is_file():
         checkpoints = [model_path]
 
-    print("checkpoints = [model_path]")
-    print(checkpoints)
-
     # Check if we found some files
     assert len(checkpoints) > 0, (
         f"Can't find the requested checkpoint data at {model_path}"
@@ -378,8 +375,6 @@ def load_state_dict(
 
     checkpoint_sds = []
     if checkpoints[0].suffix == ".safetensors":
-        print("checkpoints[0].suffix == safetensors")
-        print(checkpoint_sds)
         for ckp in checkpoints:
             checkpoint_sds.append(
                 _load_safetensors_state_dict(
@@ -393,11 +388,7 @@ def load_state_dict(
                 torch.load(str(ckpt_path), mmap=True, map_location=initial_device)
                 for ckpt_path in checkpoints
             ]
-            print("with torch.no_grad():")
-            print(checkpoint_sds)
-
-    print("checkpoint_sds")
-    print(checkpoint_sds)
+            
     return ChainMap(*checkpoint_sds)
 
 
