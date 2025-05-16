@@ -497,6 +497,10 @@ def _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]
         for pattern, repl in replacements:
             new_name = re.sub(pattern, repl, new_name)
         new_sd[new_name] = param
+    
+    print("529 - serialization.register_adapter_step(_architecture_name, hf_to_fms_names, _hf_to_fms_names)")
+
+    print(new_sd)
     return new_sd
 
 
@@ -510,7 +514,6 @@ def _get_rope_params(linear_type: str) -> list[str]:
         return ["qweight", "scales", "qzeros", "bias"]
     else:  # torch.nn.Linear
         return ["weight", "bias"]
-
 
 def _hf_to_fms_rope(
     input_sd: Mapping[str, Any], model_config: Optional[MistralConfig] = None, **kwargs
@@ -566,12 +569,18 @@ def _hf_to_fms_rope(
         else:
             new_sd[name] = param
 
+    print("600 - serialization.register_adapter_step(_architecture_name, hf_to_fms_rope, _hf_to_fms_rope)")
+
+    print(new_sd)
     return new_sd
 
 
 serialization.register_adapter_step(
     _architecture_name, "hf_to_fms_rope", _hf_to_fms_rope
 )
+
+print("610 - After - serialization.register_adapter_step(_architecture_name, hf_to_fms_rope, _hf_to_fms_rope)")
+print(Mistral.get_config())
 
 serialization.register_adapter(
     _architecture_name,
