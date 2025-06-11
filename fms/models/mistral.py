@@ -497,6 +497,9 @@ def _hf_to_fms_names(input_sd: Mapping[str, Any], **kwargs) -> Mapping[str, Any]
         for pattern, repl in replacements:
             new_name = re.sub(pattern, repl, new_name)
         new_sd[new_name] = param
+        print("_hf_to_fms_names")
+        print(new_name)
+        print(param)
     return new_sd
 
 

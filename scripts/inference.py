@@ -263,5 +263,9 @@ do_sample = [False]
 use_cache = [
     args.no_use_cache
 ]  # True/False are identical with greedy iff `torch.use_deterministic_algorithms(True)`
+
+print("named parameters")
+print(model.named_parameters())
+
 for sample, cache in itertools.product(do_sample, use_cache):
     infer(cache, sample)
