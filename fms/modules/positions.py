@@ -193,67 +193,50 @@ class RopeLlama3ScalingImpl(RopeNoScalingImpl):
         freqs = torch.where(is_medium_freq, smoothed_freqs, freqs_llama)
         return freqs
 
-
 class YarnRopeImpl(RopeNoScalingImpl):
-    def __init__(self, dim, ratio, orig_max_seq_len, scaling_info):
-        super().__init__(dim, ratio, orig_max_seq_len, scaling_info)
-        self.concentration: Optional[float] = None
+    """
+    YARN RoPE scaling:
+    https://arxiv.org/abs/2309.00071
+    """
+
+    def get_alpha(self, current_max_seq_len: int) -> int:
+        return 1
+
+    def scaled_max_seq_len(self, current_max_seq_len: int, alpha: int):
+        return max(current_max_seq_len, self.orig_max_seq_len)
 
     def compute_scaled_freqs(self, device: str, alpha: int):
-        """See YaRN paper: https://arxiv.org/abs/2309.00071"""
-        scaling_factor = self.scaling_info["scaling_factor"]
-        ntk_beta = self.scaling_info["ntk_beta"]
-        ntk_alpha = self.scaling_info["ntk_alpha"]
-        freq = self.ratio ** (
-            torch.arange(0, self.dim, 2, dtype=torch.float32, device=device) / self.dim
+        dim = self.dim
+        ratio = self.ratio
+
+        base_inv_freq = 1.0 / (
+            ratio ** (torch.arange(0, dim, 2, device=device).float() / dim)
         )
-        if scaling_factor > 1.0:
-            self.concentration = (
-                0.1 * math.log(scaling_factor) + 1.0
-            )  # YaRN concentration
 
-            d_half = self.dim / 2
-            # NTK by parts
-            low = (
-                d_half
-                * math.log(self.orig_max_seq_len / (ntk_beta * 2 * math.pi))
-                / math.log(self.ratio)
-            )
-            high = (
-                d_half
-                * math.log(self.orig_max_seq_len / (ntk_alpha * 2 * math.pi))
-                / math.log(self.ratio)
-            )
-            assert 0 < low < high < d_half - 1
+        # NTK-style scaled freq
+        ntk_alpha = self.scaling_info["ntk_alpha"]
+        ntk_beta = self.scaling_info["ntk_beta"]
+        scaling_factor = self.scaling_info["scaling_factor"]
 
-            interpolation = 1.0 / (scaling_factor * freq)
-            extrapolation = 1.0 / freq
+        ratio_ntk = ratio * scaling_factor ** (dim / (dim - 2))
+        ntk_inv_freq = 1.0 / (
+            ratio_ntk ** (torch.arange(0, dim, 2, device=device).float() / dim)
+        )
 
-            ramp = (
-                torch.arange(d_half, dtype=torch.float32, device=freq.device) - low
-            ) / (high - low)
-            mask = 1 - ramp.clamp(0, 1)
+        idx = torch.arange(
+            base_inv_freq.size(0),
+            device=device,
+            dtype=base_inv_freq.dtype,
+        )
 
-            inv_freq = interpolation * (1 - mask) + extrapolation * mask
-        else:
-            self.concentration = 1.0
-            inv_freq = 1.0 / freq
+        ramp = torch.clamp(
+            (idx - ntk_alpha) / (ntk_beta - ntk_alpha),
+            min=0.0,
+            max=1.0,
+        )
 
+        inv_freq = (1.0 - ramp) * base_inv_freq + ramp * ntk_inv_freq
         return inv_freq
-
-    def apply_yarn_rotary_emb(
-        self,
-        x: torch.Tensor,
-        cos: torch.Tensor,
-        sin: torch.Tensor,
-        position_ids: torch.Tensor,
-    ) -> torch.Tensor:
-        cos = cos[position_ids].unsqueeze(-2).to(x.dtype)
-        sin = sin[position_ids].unsqueeze(-2).to(x.dtype)
-        x1, x2 = torch.chunk(x, 2, dim=-1)
-        o1 = x1 * cos - x2 * sin
-        o2 = x2 * cos + x1 * sin
-        return torch.cat((o1, o2), dim=-1)
 
 
 _rope_scale_mapping = {
@@ -306,6 +289,8 @@ class RotaryEmbedding(PositionEncoder):
         self.cached_freqs: MutableMapping[int, MutableMapping[int, torch.Tensor]] = {}
         self.max_seq_len_cached: MutableMapping[int, int] = {}
 
+        self._decode_pos = defaultdict(int)
+
     def compute_freqs_cis(self, device, max_seq_len=2048):
         alpha = self.rope_scaling.get_alpha(max_seq_len)
 
@@ -334,21 +319,15 @@ class RotaryEmbedding(PositionEncoder):
 
                 self.max_seq_len_cached[dev_idx] = scaled_max_seq_len
 
-                if self.rope_type == "yarn":
-                    cos = freqs.cos() * self.rope_scaling.concentration
-                    sin = freqs.sin() * self.rope_scaling.concentration
-
-                    self.cached_freqs[dev_idx][alpha] = (cos, sin)
-                else:
-                    self.cached_freqs[dev_idx][alpha] = torch.stack(
-                        [
-                            torch.cos(freqs),
-                            -torch.sin(freqs),
-                            torch.sin(freqs),
-                            torch.cos(freqs),
-                        ],
-                        dim=2,
-                    ).view(*freqs.size(), 2, 2)
+                self.cached_freqs[dev_idx][alpha] = torch.stack(
+                    [
+                        torch.cos(freqs),
+                        -torch.sin(freqs),
+                        torch.sin(freqs),
+                        torch.cos(freqs),
+                    ],
+                    dim=2,
+                ).view(*freqs.size(), 2, 2)
 
         return alpha
 
@@ -387,21 +366,26 @@ class RotaryEmbedding(PositionEncoder):
         assert len(k.size()) == 4
 
         seq_len = max(k.size(1), q.size(1))
-        if position_ids is None:
-            # Compute position_ids based on cache config
-            position_ids = torch.arange(
-                0, seq_len, dtype=torch.long, device=q.device
-            ).repeat(k.size(0), 1)
-            if (
-                use_cache
-                and past_kv_state is not None
-                and past_kv_state[0] is not None
-                and past_kv_state[0].numel() > 0
-            ):
-                position_ids += past_kv_state[0].size(2)
 
-        # the max start position should be based on the max first position of each sequence
-        max_start_pos = torch.max(position_ids[:, 0])
+        # past_kv_state shape: (past_key, past_value)
+        
+        if position_ids is None:
+            B, cur_seq_len = q.size(0), q.size(1)
+
+            # compute start positions per batch (for KV cache)
+            if position_ids is None:
+                if use_cache and past_kv_state is not None and past_kv_state[0] is not None:
+                    # past_kv_state[0].shape = [B, S_past, H, Eh]
+                    past_len = past_kv_state[0].size(1)
+                else:
+                    past_len = 0
+
+                # current sequence positions
+                position_ids = torch.arange(past_len, past_len + cur_seq_len, device=q.device)
+                position_ids = position_ids.unsqueeze(0).expand(B, -1)  # shape [B, cur_seq_len]
+
+
+        print("position_ids after adding past_kv_state", position_ids)
 
         if self.partial_rope != 1.0:
             q_rope = q[..., : self.dim]
@@ -409,34 +393,23 @@ class RotaryEmbedding(PositionEncoder):
         else:
             q_rope = q
             k_rope = k
+
         q_ = q_rope.float().view(*q.size()[:-1], -1, 2)  # B L H D/2 2
         k_ = k_rope.float().view(*k.size()[:-1], -1, 2)  # B L H D/2 2
 
         # the max start position should be based on the max first position of each sequence
-        max_start_pos = torch.max(position_ids[:, 0])
-
+        max_start_pos = position_ids[:, 0].max()
         alpha = self.compute_freqs_cis(q.device, max_start_pos + seq_len)
+        max_len = self.cached_freqs[q.device.index][alpha].size(0)
+        position_ids_clamped = position_ids.clamp(0, max_len - 1)
+        # cached freqs shape: [max_seq_len, dim//2, 2, 2]
+            # position_ids_clamped shape: [B, L]
+        B, L = position_ids_clamped.shape
+        freqs_full = self.cached_freqs[q.device.index][alpha]  # [max_seq_len, dim//2, 2, 2]
 
-        if self.rope_type == "yarn":
-            # Compute cos/sin for max position
-            freqs = self.cached_freqs[q.device.index][alpha]
+        # Gather per batch correctly
+        freqs = freqs_full[position_ids_clamped.view(-1)].view(B, L, *freqs_full.shape[1:])
 
-            cos = freqs[0]
-            sin = freqs[1]
-
-            query_shape = q.shape
-            key_shape = k.shape
-
-            query = self.rope_scaling.apply_yarn_rotary_emb(q, cos, sin, position_ids)  # type: ignore
-            key = self.rope_scaling.apply_yarn_rotary_emb(k, cos, sin, position_ids)  # type: ignore
-
-            return query.reshape(query_shape), key.reshape(key_shape)
-
-        freqs = self.cached_freqs[q.device.index][alpha][position_ids]
-
-        position_ids = position_ids.clamp(max=freqs.size(0) - 1)
-
-        freqs = freqs.float()  # 1 L D/2 2 2
 
         q_out = (
             freqs[:, -q.size(1) :, None, :, :, :]
