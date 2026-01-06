@@ -273,6 +273,13 @@ class GptOssHeadless(nn.Module):
             self.embedding.weight, mean=0.0, std=self.config.emb_dim**-0.5
         )
 
+        # RoPE init
+        for device in set(
+            [param.device for param in self.parameters()]
+            + [buffer.device for buffer in self.buffers()]
+        ):
+            self.rot_emb.compute_freqs_cis(device, self.config.max_expected_seq_len)
+
         # Call reset_parameters for relevant sub-layers
         for m in self.modules():
             if isinstance(m, MultiHeadAttention) or isinstance(m, MOEFeedForward):
