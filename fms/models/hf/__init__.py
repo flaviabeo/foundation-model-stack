@@ -12,6 +12,10 @@ from fms.models.hf.granite.modeling_granite_hf import (
 )
 from fms.models.hf.llama import HFAdaptedLLaMAForCausalLM
 from fms.models.hf.llama.modeling_llama_hf import HFAdaptedLLaMAHeadless
+from fms.models.hf.mistral.modeling_mistral_hf import (
+    HFAdaptedMistralForCausalLM,
+    HFAdaptedMistralHeadless,
+)
 from fms.models.hf.mixtral.modeling_mixtral_hf import (
     HFAdaptedMixtralForCausalLM,
     HFAdaptedMixtralHeadless,
@@ -23,6 +27,7 @@ from fms.models.hf.roberta.modeling_roberta_hf import (
 from fms.models.hf.utils import register_fms_models
 from fms.models.llama import LLaMA
 from fms.models.granite import Granite, GraniteHeadless
+from fms.models.mistral import Mistral, MistralHeadless
 from fms.models.mixtral import Mixtral, MixtralHeadless
 from fms.models.roberta import RoBERTa, RoBERTaHeadless
 
@@ -38,6 +43,8 @@ _fms_to_hf_adapt_map = {
     GPTBigCodeHeadless: HFAdaptedGPTBigCodeHeadless,
     RoBERTa: HFAdaptedRoBERTaForMaskedLM,
     RoBERTaHeadless: HFAdaptedRoBERTaHeadless,
+    Mistral: HFAdaptedMistralForCausalLM,
+    MistralHeadless: HFAdaptedMistralHeadless,
     Mixtral: HFAdaptedMixtralForCausalLM,
     MixtralHeadless: HFAdaptedMixtralHeadless,
 }
@@ -50,6 +57,7 @@ _headless_models = [
     HFAdaptedGraniteHeadless,
     HFAdaptedLLaMAHeadless,
     HFAdaptedRoBERTaHeadless,
+    HFAdaptedMistralHeadless,
     HFAdaptedMixtralHeadless,
 ]
 
@@ -60,6 +68,7 @@ _causal_lm_models = [
     HFAdaptedGPTBigCodeForCausalLM,
     HFAdaptedGraniteForCausalLM,
     HFAdaptedLLaMAForCausalLM,
+    HFAdaptedMistralForCausalLM,
     HFAdaptedMixtralForCausalLM,
 ]
 
