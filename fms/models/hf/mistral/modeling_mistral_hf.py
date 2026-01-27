@@ -67,16 +67,22 @@ class HFAdaptedMistralHeadless(HFDecoderModelArchitecture):
         if decoder is None or embedding is None:
             params = config.to_dict()
             params["pad_id"] = params.pop("pad_token_id")
-            
+
             # Remove HF-specific parameters that are not part of MistralConfig
             hf_only_params = [
-                "use_cache", "is_decoder", "add_cross_attention",
-                "architectures", "transformers_version", "_name_or_path",
-                "torch_dtype", "auto_map", "model_type"
+                "use_cache",
+                "is_decoder",
+                "add_cross_attention",
+                "architectures",
+                "transformers_version",
+                "_name_or_path",
+                "torch_dtype",
+                "auto_map",
+                "model_type",
             ]
             for param in hf_only_params:
                 params.pop(param, None)
-            
+
             fms_config = MistralConfig(**params)
             model = MistralHeadless(fms_config)
             decoder = model if decoder is None else decoder
@@ -103,12 +109,15 @@ class HFAdaptedMistralHeadless(HFDecoderModelArchitecture):
             position_ids = attention_mask.long().cumsum(-1) - 1
             position_ids.masked_fill_(attention_mask == 0, 1)
             if past_key_values:
-                position_ids = position_ids[:, -input_ids.shape[1]:]
+                position_ids = position_ids[:, -input_ids.shape[1] :]
 
         # Add more cached rope freqs if over cached number
         if position_ids is not None:
             max_expected_len = input_ids.shape[1] + torch.max(position_ids).item()
-            if max_expected_len > self.decoder.model.rot_emb.rope_scaling.orig_max_seq_len:
+            if (
+                max_expected_len
+                > self.decoder.model.rot_emb.rope_scaling.orig_max_seq_len
+            ):
                 self.decoder.model.rot_emb.compute_freqs_cis(
                     input_ids.device, max_expected_len
                 )

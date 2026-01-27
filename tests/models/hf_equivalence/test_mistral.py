@@ -14,20 +14,20 @@ from fms.testing.comparison import (
 def test_mistral_equivalence():
     """
     Tests Mistral equivalence with a known implementation.
-    
+
     This test verifies that the FMS Mistral implementation is equivalent to the
     HuggingFace Mistral implementation by comparing:
     - Parameter counts
     - Model signatures
     - Generation outputs
     - Training loss
-    
+
     Note: This test requires a HuggingFace Mistral model path to be set.
     """
     from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
     mistral_model_path = "mistralai/Mistral-7B-v0.1"
-    
+
     tokenizer = AutoTokenizer.from_pretrained(mistral_model_path, use_fast=True)
     hf_model = AutoModelForCausalLM.from_pretrained(mistral_model_path)
 
@@ -111,4 +111,3 @@ def test_mistral_equivalence():
         math.isclose(hf_model_loss.item(), hf_model_fms_loss.item(), abs_tol=1e-3),
         "model loss is not equal",
     )
-

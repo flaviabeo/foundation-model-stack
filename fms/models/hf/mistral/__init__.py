@@ -103,5 +103,3 @@ def convert_to_hf(
         oss_hf_model.lm_head.weight.copy_(fms_hf_model.lm_head.weight)
 
     return oss_hf_model
-
-
