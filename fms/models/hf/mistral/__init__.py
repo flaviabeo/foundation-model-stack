@@ -27,10 +27,10 @@ def convert_to_hf(
     # Handle optional emb_dim - should not be None in practice but type system requires check
     emb_dim = hf_config.emb_dim if hf_config.emb_dim is not None else 4096
     intermediate_size = int(hf_config.hidden_grow_factor * emb_dim)
-    
+
     # Convert empty rope_scaling dict to None for HF compatibility
     rope_scaling = hf_config.rope_scaling if hf_config.rope_scaling else None
-    
+
     oss_hf_model = MistralForCausalLM(
         MistralConfig(
             vocab_size=hf_config.src_vocab_size,

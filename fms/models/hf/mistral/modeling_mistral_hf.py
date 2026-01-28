@@ -33,7 +33,6 @@ class HFAdaptedMistralDecoder(HFDecoder):
         if kwargs.get("mask", None) is None and attention_mask is not None:
             kwargs["mask"] = attention_mask
 
-
         output = self.model(
             x_in=input_ids,
             position_ids=position_ids,
@@ -48,6 +47,7 @@ class HFAdaptedMistralDecoder(HFDecoder):
         return BaseModelOutputWithPastAndCrossAttentions(
             last_hidden_state=output, past_key_values=present_key_values
         )
+
 
 class HFAdaptedMistralHeadless(HFDecoderModelArchitecture):
     """This is the Adapter for the base Mistral architecture"""
@@ -89,12 +89,13 @@ class HFAdaptedMistralHeadless(HFDecoderModelArchitecture):
                 "use_return_dict",
                 "tie_word_embeddings",
                 "torchscript",
-                "dtype", "pruned_heads",
+                "dtype",
+                "pruned_heads",
                 "chunk_size_feed_forward",
                 "is_encoder_decoder",
                 "cross_attention_hidden_size",
-                "tie_encoder_decoder", 
-                "finetuning_task", 
+                "tie_encoder_decoder",
+                "finetuning_task",
                 "id2label",
                 "label2id",
                 "task_specific_params",
@@ -102,7 +103,7 @@ class HFAdaptedMistralHeadless(HFDecoderModelArchitecture):
                 "tokenizer_class",
                 # Generation-related
                 "max_length",
-                "min_length", 
+                "min_length",
                 "do_sample",
                 "prefix",
                 "early_stopping",
@@ -127,30 +128,25 @@ class HFAdaptedMistralHeadless(HFDecoderModelArchitecture):
                 "exponential_decay_length_penalty",
                 "suppress_tokens",
                 "begin_suppress_tokens",
-
                 # Tokenizer-related
                 "bos_token_id",
-                "eos_token_id", 
+                "eos_token_id",
                 "pad_token_id",  # Note: Mistral converts this to pad_id
                 "sep_token_id",
                 "decoder_start_token_id",
-
                 # Training-related
                 "gradient_checkpointing",
                 "use_cache",
-
-                # Quantization-related  
+                # Quantization-related
                 "quantization_config",
                 "pretraining_tp",
-
                 # Other metadata
                 "name_or_path",
                 "_commit_hash",
                 "_attn_implementation",
                 "attn_implementation",
                 "tf_legacy_loss",
-                "use_bfloat16"
-
+                "use_bfloat16",
             ]
             for param in hf_only_params:
                 if param in params:
@@ -183,7 +179,6 @@ class HFAdaptedMistralHeadless(HFDecoderModelArchitecture):
             position_ids = attention_mask.long().cumsum(-1) - 1
             position_ids.masked_fill_(attention_mask == 0, 1)
 
-        
         token_type_ids = kwargs.get("token_type_ids", None)
         # only last token for inputs_ids if past is defined in kwargs
 
@@ -247,4 +242,3 @@ class HFAdaptedMistralForCausalLM(LMHeadModelLMHeadMixin, HFAdaptedMistralHeadle
         # This is necessary because the decoder was already initialized in the FMS model
         out.decoder.model.post_init()
         return out
-

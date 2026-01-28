@@ -105,7 +105,7 @@ class TestMistralHF(
             generated_ids, skip_special_tokens=True
         )
         return generated_texts
-    
+
     text_options = [
         ["hello how are you?"],
         ["hello how are you?", "a: this is a test. b: this is another test. a:"],
@@ -180,5 +180,3 @@ class TestMistralHF(
         ratio2 = SequenceMatcher(None, output_batch[1], output_text2).ratio()
 
         assert ratio2 > 0.9, f"text 2 incorrect - \n{output_batch[1]}\n{output_text2}"
- 
-

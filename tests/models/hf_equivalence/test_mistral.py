@@ -11,6 +11,7 @@ from fms.testing.comparison import (
 
 from difflib import SequenceMatcher
 
+
 @pytest.mark.slow
 def test_mistral_equivalence():
     """
@@ -30,11 +31,13 @@ def test_mistral_equivalence():
     mistral_model_path = "mistralai/Mistral-7B-v0.1"
 
     tokenizer = AutoTokenizer.from_pretrained(mistral_model_path, use_fast=True)
-    
+
     # Load both models in float32 for accurate comparison
     # bfloat16 can have numerical differences between implementations
     model = get_model("hf_pretrained", mistral_model_path, data_type="float32")
-    hf_model = AutoModelForCausalLM.from_pretrained(mistral_model_path, torch_dtype=torch.float32)
+    hf_model = AutoModelForCausalLM.from_pretrained(
+        mistral_model_path, torch_dtype=torch.float32
+    )
 
     hf_model_fms = to_hf_api(
         model,
@@ -98,6 +101,8 @@ def test_mistral_equivalence():
     output_hf_fms = generator_hf_fms(prompt)
 
     # Calculate similarity ratio
-    ratio = SequenceMatcher(None, output_hf[0]["generated_text"], output_hf_fms[0]["generated_text"]).ratio()
+    ratio = SequenceMatcher(
+        None, output_hf[0]["generated_text"], output_hf_fms[0]["generated_text"]
+    ).ratio()
 
     assert ratio > 0.8
