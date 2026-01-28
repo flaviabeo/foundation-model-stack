@@ -62,12 +62,15 @@ class HFAdaptedMistralConfig(PretrainedConfig):
         self.rope_base = rope_base
         self.rope_scaling = rope_scaling
         self.use_cache = use_cache
+        # Extract tie_word_embeddings before passing kwargs to parent
+        tie_word_embeddings = kwargs.pop("tie_word_embeddings", tie_heads)
+        
         super().__init__(
             pad_token_id=pad_token_id,
             eos_token_id=eos_token_id,
             bos_token_id=bos_token_id,
             is_decoder=is_decoder,
-            tie_word_embeddings=kwargs.pop("tie_word_embeddings", tie_heads),
+            tie_word_embeddings=tie_word_embeddings,
             **kwargs,
         )
 
