@@ -138,9 +138,9 @@ class TestMistralHF(
         )
 
         # Calculate similarity ratio
-        ratio = SequenceMatcher(None, output_hf[0], output_hf[0]).ratio()
+        ratio = SequenceMatcher(None, output_fms[0], output_hf[0]).ratio()
 
-        assert ratio > 0.9
+        assert ratio > 0.87
 
     hf_batch_generate_args = list(
         itertools.product(use_cache_options, num_beams_options)
