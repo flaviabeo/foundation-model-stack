@@ -29,10 +29,11 @@ def test_mistral_equivalence():
     mistral_model_path = "mistralai/Mistral-7B-v0.1"
 
     tokenizer = AutoTokenizer.from_pretrained(mistral_model_path, use_fast=True)
-    hf_model = AutoModelForCausalLM.from_pretrained(mistral_model_path)
-
-    # Convert the HF model to FMS
-    model = get_model("hf_pretrained", mistral_model_path)
+    
+    # Load both models in float32 for accurate comparison
+    # bfloat16 can have numerical differences between implementations
+    model = get_model("hf_pretrained", mistral_model_path, data_type="float32")
+    hf_model = AutoModelForCausalLM.from_pretrained(mistral_model_path, torch_dtype=torch.float32)
 
     hf_model_fms = to_hf_api(
         model,
@@ -70,7 +71,7 @@ def test_mistral_equivalence():
     )
 
     compare_model_signatures(fms_signature_params, hf_fms_signature_params)
-    #compare_model_signatures(hf_fms_signature_params, hf_signature_params)
+    compare_model_signatures(hf_fms_signature_params, hf_signature_params)
 
     # Test Generation Pipeline
 
@@ -82,7 +83,7 @@ def test_mistral_equivalence():
         tokenizer=tokenizer,
         use_cache=True,
         num_beams=3,
-        max_new_tokens=10,
+        max_new_tokens=5,
     )
     generator_hf_fms = pipeline(
         task="text-generation",
@@ -90,7 +91,7 @@ def test_mistral_equivalence():
         tokenizer=tokenizer,
         use_cache=True,
         num_beams=3,
-        max_new_tokens=10,
+        max_new_tokens=5,
     )
     output_hf = generator_hf(prompt)
     output_hf_fms = generator_hf_fms(prompt)

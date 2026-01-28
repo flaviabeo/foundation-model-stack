@@ -180,7 +180,8 @@ class HFAdaptedMistralHeadless(HFDecoderModelArchitecture):
         position_ids = kwargs.pop("position_ids", None)
 
         if position_ids is None and attention_mask is not None:
-            position_ids = attention_mask.long().cumsum(-1)
+            position_ids = attention_mask.long().cumsum(-1) - 1
+            position_ids.masked_fill_(attention_mask == 0, 1)
 
         
         token_type_ids = kwargs.get("token_type_ids", None)
@@ -242,5 +243,8 @@ class HFAdaptedMistralForCausalLM(LMHeadModelLMHeadMixin, HFAdaptedMistralHeadle
             embedding=model.base_model.embedding,
             lm_head=model.head,
         )
+        # Ensure RoPE frequencies are recomputed on the correct device
+        # This is necessary because the decoder was already initialized in the FMS model
+        out.decoder.model.post_init()
         return out
 

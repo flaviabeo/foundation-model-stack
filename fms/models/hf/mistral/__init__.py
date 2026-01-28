@@ -24,19 +24,18 @@ def convert_to_hf(
         an HF equivalent model
     """
     hf_config: HFAdaptedMistralConfig = fms_hf_model.config
+    # Handle optional emb_dim - should not be None in practice but type system requires check
+    emb_dim = hf_config.emb_dim if hf_config.emb_dim is not None else 4096
+    intermediate_size = int(hf_config.hidden_grow_factor * emb_dim)
+    
+    # Convert empty rope_scaling dict to None for HF compatibility
+    rope_scaling = hf_config.rope_scaling if hf_config.rope_scaling else None
+    
     oss_hf_model = MistralForCausalLM(
         MistralConfig(
             vocab_size=hf_config.src_vocab_size,
-            hidden_size=hf_config.emb_dim,
-            intermediate_size=hf_config.multiple_of
-            * (
-                (
-                    int(hf_config.hidden_grow_factor * hf_config.emb_dim)
-                    + hf_config.multiple_of
-                    - 1
-                )
-                // hf_config.multiple_of
-            ),
+            hidden_size=emb_dim,
+            intermediate_size=intermediate_size,
             num_hidden_layers=hf_config.nlayers,
             num_attention_heads=hf_config.nheads,
             num_key_value_heads=hf_config.kvheads,
@@ -46,9 +45,7 @@ def convert_to_hf(
             bos_token_id=hf_config.bos_token_id,
             eos_token_id=hf_config.eos_token_id,
             rope_theta=hf_config.rope_base,
-            rope_scaling=hf_config.rope_scaling
-            if len(hf_config.rope_scaling) > 0
-            else None,
+            rope_scaling=rope_scaling,
             attention_dropout=hf_config.p_dropout,
             sliding_window=hf_config.sliding_window,
             hidden_act=hf_config.activation_fn,
